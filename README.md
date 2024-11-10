@@ -12,7 +12,7 @@
 
 - apk : 안드로이드 패키지로서, 런타임에 필요한 앱의 내용물이 포함되어 있기에 기기에서 설치할 수 있는 파일 타입입니다.
 
-## Component
+## Component (Activity, Service, Content Provider, Broadcast Receiver)
 
 ### Activity
 
