@@ -92,7 +92,7 @@
 
 
 
-## Context
+# Context
 
 앱의 상태를 지니고 있으며, 액티비티나 애플리케이션의 정보를 얻을 수 있는 객체입니다. `Activity`와 `Application` 클래스가 이 클래스를 상속받고 있으며, Application Context와 Activity Context로 나눌 수 있습니다.
 
@@ -101,3 +101,133 @@
 - **Activity Context** : 액티비티 라이프사이클과 묶여있는 Context이며 토스트, 다이얼로그처럼 액티비티보다 라이프사이클 주기가 짧은 컴포넌트에서 사용하기에 적합합니다. 
 
 > Application Context는 Activity Context가 지원하는 모든 것을 지원하지 않기 때문에, Application Context를 GUI 같은 이벤트들에 사용하게 된다면 크래시가 발생할 확률이 높으며 앱 프로세스가 살아있는 동안 계속 남아있기 때문에 적절한 시기에 메모리에서 할당해주는 것이 중요합니다.
+
+
+
+# Intent
+
+## Intent Filter
+
+
+
+# Fragment
+
+# 
+
+# RecyclerView
+
+
+
+# Save State
+
+## ViewModel
+
+> Question
+> 
+> ViewModel은 어떻게 액티비티가 파괴되도 유지되나요?
+
+## Save state API
+
+
+
+# Thread vs Process
+
+
+
+# Dependency Injection
+
+## Koin
+
+## Dagger Hilt
+
+
+
+# Architecture
+
+## MVC
+
+## MVP
+
+## MVVM
+
+## MVI
+
+
+
+# Network
+
+## Retrofit2
+
+## OkHttp3
+
+## Gson
+
+
+
+# Image
+
+## Glide
+
+## Coil
+
+
+
+# UI Optimization
+
+## Like 처리
+
+## 중복된 API 호출 문제
+
+
+
+# Kotlin
+
+## Sealed class vs Enum
+
+## Lazy vs lateinit
+
+## Serialize vs Parcelable
+
+## Coroutine
+
+- CPS
+
+> Question
+> 
+> 스레드와 차이점이 뭘까요?
+
+## Flow
+
+### Hot Flow
+
+- StateFlow
+
+- SharedFlow
+
+### Cold Flow
+
+## LiveData
+
+> Question
+> 
+> LiveData 대신 Flow를 쓴다면 이유가 무엇인가요?
+
+
+
+# Compose
+
+## Composition
+
+## Recomposition
+
+## Performance
+
+## LazyXXX
+
+> Question
+> 
+> key, contentType은 무엇이고 각각 지정하지 않으면 어떤 값이 사용되나요?
+
+> Question
+> 
+> 어떤 원리로 아이템들이 재사용되는 걸까요
