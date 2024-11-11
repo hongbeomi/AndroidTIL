@@ -92,4 +92,12 @@
 
 
 
-# 
+## Context
+
+앱의 상태를 지니고 있으며, 액티비티나 애플리케이션의 정보를 얻을 수 있는 객체입니다. `Activity`와 `Application` 클래스가 이 클래스를 상속받고 있으며, Application Context와 Activity Context로 나눌 수 있습니다.
+
+- **Application Context** : 애플리케이션 라이프사이클과 묶여있는 Context이며, 오랫 동안 지속되거나 전역적인 부분에서 사용되어야 할 경우 접근하여 사용하기에 적합합니다.
+
+- **Activity Context** : 액티비티 라이프사이클과 묶여있는 Context이며 토스트, 다이얼로그처럼 액티비티보다 라이프사이클 주기가 짧은 컴포넌트에서 사용하기에 적합합니다. 
+
+> Application Context는 Activity Context가 지원하는 모든 것을 지원하지 않기 때문에, Application Context를 GUI 같은 이벤트들에 사용하게 된다면 크래시가 발생할 확률이 높으며 앱 프로세스가 살아있는 동안 계속 남아있기 때문에 적절한 시기에 메모리에서 할당해주는 것이 중요합니다.
