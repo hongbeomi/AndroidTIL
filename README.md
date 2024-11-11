@@ -45,3 +45,29 @@
 > Answer
 > 
 >  A : `onCreate` -> A : `onStart` -> A : `onResume` -> 전환 이벤트 발생 -> A : `onPause` -> B : `onCreate` -> B : `onStart` -> B : `onResume` -> A : `onStop` -> A : `onSaveInstanceState` -> 다시 A로 전환 이벤트 발생 및 B 액티비티 종료 -> B : `onPause` -> A : `onRestart` -> A : `onStart` -> A : `onResume` -> B : `onStop` -> B : `onDestroy`
+
+
+
+### Service
+
+서비스는 백그라운드에서 실행되는 컴포넌트입니다. 크게 두 가지로 나뉘고 세분화하면 세 가지로 나뉩니다.
+
+- Started Service
+  
+  - foreground service : 어느 정도 사용자에게 보여지는 작업을 수행합니다. (ex : 상단바의 컨트롤러) 반드시 알림(노티피케이션)이 지속적으로 표시해야 합니다.
+  
+  - background service : 사용자에게 보여지지 않는 작업을 수행합니다. 앱이 API 26 이상을 타겟팅한다면 시스템 자원 낭비 차원에서 실행이 제한되는데, WorkManager를 사용하는 것이 권장된다.
+
+- Bound Service : 앱 컴포넌트가 바인딩 된 형태의 서비스이다. 바인딩된 컴포넌트와 클라이언트-서버 구조처럼 상호작용하는 것이 가능하다. 
+  
+  ![](https://velog.velcdn.com/images%2Fhaero_kim%2Fpost%2F7dc04ab6-0179-4047-980f-662c1df8db1a%2F0_rbbPsYYkjekH6LYV.png)
+
+> 세 가지 서비스 구조가 분리된 것이 아닌, 혼합하여 사용할 수 있으며 기본적으로 서비스를 생성하면 호스팅된 프로세스의 기본 스레드에서 동작하게 되는데 블로킹 우려가 있는 작업(음악 재생, 파일 다운로드)을 실행하려면 별도의 스레드를 생성하여 작업을 수행해야한다. 
+
+> Question
+> 
+> 서비스를 사용하면서 라이프 사이클 관리는 어떻게 하는가?
+> 
+> Answer
+> 
+> 개발자가 자체적으로 생명주기 콜백 메소드에 맞춰서 작업을 해도 되지만, LifecycleService를 상속받는 Service를 구현하여 쉽게 작업할 수 있다.
