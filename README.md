@@ -160,7 +160,61 @@
 
 # Fragment
 
-# 
+액티비티 내에서 사용되는 재사용 가능한 UI 부분을 표현하는데 사용되는 객체입니다. 다양한 화면 크기에 반응하는 앱을 만들어야 한다면, 화면 크기에 따라 프래그먼트를 다르게 배치하여 표현이 가능합니다. 자체 수명주기가 존재하고 자체적으로 입력 이벤트를 처리할 수 있습니다. 
+
+프래그먼트는 `FragmentManager`에 의해 관리되며 `FragmentManager`는 프래그먼트가 어떤 상태여야 하는지 확인 한 후 다음 상태로 전환하는 일을 담당합니다. 개발자는 `onAttach`, `onDetach` 콜백에서 `FragmentManager`에 프래그먼트가 추가되거나 삭제되었을 때 처리되어야 하는 작업을 작성할 수 있습니다.
+
+프래그먼트의 수명주기는 프래그먼트 자체의 수명주기와 보여지는 뷰의 수명주기로 나눌 수 있고 아래와 같은 메소드들이 호출됩니다. 
+
+`Lifecycle` 상태는 `State` 열거형으로 표현됩니다. (`INITIALIZED`, `CREATED`, `STARTED`, `RESUMED`, `DESTROYED`)
+
+**Fragment Lifecycle Callback Method**
+
+<img src="https://developer.android.com/static/images/guide/fragments/fragment-view-lifecycle.png?hl=ko" title="" alt="프래그먼트 수명 주기 상태와 이 상태가 프래그먼트의 수명 주기 콜백 및 프래그먼트의 뷰 수명 주기와 갖는 관계" width="510">
+
+- `onCreate` : 프래그먼트가 `FragmentManager`에 추가되고 `onAttach`가 호출된 직후의 상태입니다. 프래그먼트 자체와 연결된 저장 상태를 복원하는데 적절합니다. (인수로 `savedInstanceState`가 존재합니다)
+
+- `onCreateView` : 해당 함수를 재정의하여 `View`를 생성할 수 있습니다. (프래그먼트 생성자에 `@LayoutId`를 넘겨서도 가능함) 
+
+- `onViewCreated` : 이 위치에서는 `View`의 초기 상태를 설정하고 `View`를 업데이트 하는 콜백을 받는 `LiveData` 인스턴스를 관찰하거나 `RecyclerView`, `ViewPager2`의 어댑터를 지정하기에 적합합니다.
+
+- `onViewStateRestored` : 이전 뷰의 상태가 복원되고 뷰의 `Lifecycle`이 `CREATED` 상태로 전환됩니다. 여기에서 프래그먼트의 뷰와 관련된 상태를 복원하기에 적합합니다. (`savedInstanceState`을 파라미터로 수신함)
+
+- `onStart` : 수명주기 인식 컴포넌트를 연결하기에 적합합니다. 이 상태와 연결하면 프래그먼트의 뷰를 사용할 수 있고 하위 `FragmentManager`에서 `FragmentTransaction`을 안전하게 실행할 수 있습니다. 
+
+- `onResume` : 모든 애니메이션 효과와 트랜지션 효과가 완료되어 프래그먼트가 사용자와 상호작용할 수 있는 상태입니다. 만약 `RESUMED` 상태가 아닌 프래그먼트가 뷰에 포커스를 수동으로 지정하는 등의 작업을 처리하려고 시도해서는 안 됩니다.
+
+- `onPause` : 프래그먼트가 포커스를 잃기 시작하면 프래그먼트의 뷰의 `Lifecycle`은 다시 `STARTED` 상태로 전환되고 관찰자에게 `ON_PAUSE` 이벤트를 보내며, 프래그먼트의 `onPause` 콜백이 호출됩니다.
+
+- `onStop` : 더 이상 프래그먼트가 표시되지 않는 경우 `Lifecycle`은 `CREATED`로 전환되고 관찰자에게 `ON_STOP` 이벤트를 보냅니다. 하위 `FragmentManager`에서 `FragmentTransaction`을 안전하게 실행할 수 있는 마지막 지점입니다. **이 때 `onStop`과 `onSaveInstanceState`의 순서는 API 수준에 따라 순서가 다릅니다**. 안전하게 상태가 저장된 시점을 이용하려면 `onSaveInstanceState` 이후를 참조해야 합니다.
+  
+  ![onStop() 및 onSaveInstanceState()의 호출 순서 차이](https://developer.android.com/static/images/guide/fragments/stop-save-order.png?hl=ko)
+
+- `onSaveInstanceState` : 상태를 저장할 수 있는 콜백이며 `outState` 파라미터에 상태를 저장할 수 있습니다.
+
+- `onDestroyView` : 프래그먼트의 뷰가 윈도우에서 분리되면 뷰의 `Lifecycle`이 `DESTROYED` 상태에 진입되고 `ON_DESTROY` 이벤트를 관찰자에 보냅니다. 이 시점에서 뷰의 수명주기는 끝나게 됩니다. **이 때 프래그먼트 뷰의 모든 참조를 제거해야 합니다**.
+
+- `onDestroy` : 프래그먼트가 삭제되거나 `FragmentManager`가 소멸되면 프래그먼트의 `Lifecycle`이 `DESTROYED` 상태로 전환되고 `ON_DESTROY` 이벤트를 관찰자에게 전송합니다. 
+
+- 
+
+> Question
+> 
+> 기본 생성자에 인자를 넣어서 생성하지 않는 이유는 무엇인가요?
+> 
+> Answer
+> 
+> 인자를 생성자에 넣어서 생성하는 경우 Fragment는 재생성 될 때 기본 생성자로만 생성되기에  인자를 더 이상 알 수 없기 때문에 이슈가 발생합니다. 이런 이유로 Fragment 생성 시에는 기본 생성자를 사용하여 생성해야 하며 argument를 통해 데이터를 전달하는 것이 권장됩니다.
+
+
+
+> Question
+> 
+> 프래그먼트에서 LifecycleOwner를 this로 지정하는 것과 ViewLifecycleOwner로 지정하는 것의 차이는 무엇인가요?
+> 
+> Answer
+> 
+> 프래그먼트의 수명주기와 프래그먼트에 붙어있는 뷰의 수명주기가 다릅니다. 프래그먼트는 액티비티와 다르게 onDestroy가 호출되지 않은 상태에서 onCreateView가 여러 번 호출될 수 있습니다. 그러므로 뷰의 UI를 업데이트 하는 경우, 프래그먼트의 Lifecycle을 사용하게 된다면 메모리 누수를 유발할 수 있기 때문에 뷰의 Lifecycle을 이용하는 것이 좋습니다.
 
 # RecyclerView
 
