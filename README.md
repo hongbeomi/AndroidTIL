@@ -216,23 +216,127 @@
 > 
 > 프래그먼트의 수명주기와 프래그먼트에 붙어있는 뷰의 수명주기가 다릅니다. 프래그먼트는 액티비티와 다르게 onDestroy가 호출되지 않은 상태에서 onCreateView가 여러 번 호출될 수 있습니다. 그러므로 뷰의 UI를 업데이트 하는 경우, 프래그먼트의 Lifecycle을 사용하게 된다면 메모리 누수를 유발할 수 있기 때문에 뷰의 Lifecycle을 이용하는 것이 좋습니다.
 
+
+
 # RecyclerView
 
+- [RecyclerView Deep Dive 참조](https://medium.com/hongbeomi-dev/recyclerview-deep-dive-with-google-i-o-2016-21e0895819d2)
 
+> Question
+> 
+> 리사이클러뷰의 아이템 뷰가 모두 동일한 크기를 가질 때 성능 향상을 이룰 수 있는 방법이 있을까요?
+> 
+> Answer
+> 
+> `setHasFixedSize` 함수를 사용하면 리사이클러뷰가 아이템이 추가되거나 제거될 때 불필요한 레이아웃 계산을 건너뛸 수 있습니다. 
 
 # Save State
 
+안드로이드 앱 개발에서 액티비티가 소멸한 뒤 신속하게 화면의 UI 상태를 저장하고 복원하는 것은 중요합니다. 아래와 같은 방법으로 상태를 저장할 수 있습니다.
+
+- ViewModel 객체 내에 위치
+
+- Compose : `rememberSaveable` 사용
+
+- View : `onSaveInstanceState` API 사용
+
+- ViewModel : `SavedStateHandle` 객체 사용
+
+- 로컬 저장소 사용 : (`SharedPreference`, `DataStore`, `Room`...등등)
+
+
+
+### Activity에서 데이터 복원
+
+아래 그림은 액티비티 라이프사이클에 따라 상태 저장/복원 콜백이 호출되는 순서를 나타냅니다.
+
+<img src="https://pluu.github.io/assets/img/blog/2020/0208-savedsate/04.png" title="" alt="" width="488">
+
+`Activity`에서는 `onSaveInstanceState`에서 상태를 저장하고, `onCreate(savedInstanceState: Bundle?)` 함수와 `onRestoreInstanceState` 함수를 통해 상태를 복원할 수 있습니다.
+
+> `onRestoreInstanceState`는 `onStart` 이후에 호출되고, 재생성되어 시작될 때만 호출됩니다.
+
+
+
+
+
+상태를 저장하기 위한 방법들의 옵션은 아래와 같은 기준에 따라 다릅니다.
+
+![](/Users/hongbeom/Library/Application%20Support/CleanShot/media/media_5nojApuj4L/CleanShot%202024-11-13%20at%2016.04.28@2x.png)
+
+ViewModel 내부에 저장된 상태는 저장된 인스턴스 상태(Save Instance State)와 달리 시스템에 의해 종료될 때는 폐기됩니다. 시스템에 의한 프로세스 종료 후 재시작 시 상태를 유지하고 싶다면 
+
+[SavedStateHandle](https://developer.android.com/topic/libraries/architecture/viewmodel/viewmodel-savedstate?_gl=1*k4lah3*_up*MQ..*_ga*MTI1MjE3MTM0NC4xNzMxNDgxMzA5*_ga_6HH9YJMN9M*MTczMTQ4MTMwOS4xLjAuMTczMTQ4MTMwOS4wLjAuMTYxNDA5Njk4Nw..) API를 활용해야 합니다. 이 API는 키-값 쌍으로 구성되어 사용할 수 있으며 UI 로직이 아닌 비즈니스 로직을 저장하기에 적합합니다. UI 로직은 `onSaveInstanceState` API나 `rememberSaveable` API를 사용하는 것이 적합합니다.
+
+> Question
+> 
+> API를 사용했다면, 상태는 어떤 원리로 액티비티가 파괴되도 유지되는 걸까요? 
+> 
+> 
+
+
+
 ## ViewModel
+
+뷰모델은 액티비티가 `onCreate`를 최초로 호출할 때 생성되며 액티비티가 최종적으로 파괴되는 순간에 소멸합니다. 액티비티와 라이프사이클을 비교해본다면 아래와 같습니다. 
+
+![](https://2.bp.blogspot.com/-yDA6lQPeUM0/WjMEoM8_qsI/AAAAAAAABrU/aSrk1ePRyugp6Mna8mSPlq5K-4Moz9EcACLcBGAs/s1600/image1.png)
+
+뷰모델은 액티비티의 화면 구성 이벤트에도 상태를 안전하게 보관할 수 있는 장소입니다. 하지만 시스템에 의한 프로세스 종료 시 상태는 유지되지 않기에, `SavedStateHandle` API를 사용하여 이를 해소할 수 있는데 뷰모델이 생성될 때 `SavedStateViewModelFactory`를 통해 Saved State Handle 정보가 뷰모델로 전달됩니다. (`ComponentActivity`에서 `SavedStateViewModelFactory` 객체를 Lazy한 변수로 사용하고 있습니다.)
+
+액티비티와 프래그먼트는 각각 `ComponentActivity`, `Fragment` 클래스에서 `SavedStateViewModelFactory`를 통해 `ViewModel`을 생성하는 `Factory` 객체를 가지고 있는데, 여기서 파라미터로 각각 `intent`의 `extra`, `argument`를 넘겨줌으로서 `SavedStateHandle`의 기본값이 지정되게 됩니다.
+
+
 
 > Question
 > 
 > ViewModel은 어떻게 액티비티가 파괴되도 유지되나요?
+> 
+> Answer
+> 
+> `ViewModelStoreOwner`라는 인터페이스가 `ViewModelStore`를 구성 변경 중에도 유지하고 만약 파괴될 경우 `ViewModelStore`의 `clear`를 호출하는 역할을 담당하는데, 이 `ViewModelStoreOwner`를 구현하는 클래스가 `ComponentActivity`와 `Fragment`입니다.  각각 클래스에서 뷰모델 객체를 관리하는 `ViewModelStore`를 생성할 때 `NonConfigurationInstances`라는 객체에서 참조하거나 스스로 생성하는데, 이 `NonConfigurationInstances`가 구성 변경시 이전 `ViewModelStore`의 인스턴스를 보유하고 있기에 구성 변경 시 해당 인스턴스를 액티비티/프래그먼트에 다시 연결해줌으로써 `ViewModel`이 유지됩니다. (아래 코드 참고)
+> 
+> ```kotlin
+> final override fun onRetainNonConfigurationInstance(): Any? {
+>     val custom = onRetainCustomNonConfigurationInstance()
+>     var viewModelStore = _viewModelStore
+>     // 현재 액티비티 인스턴스가 처음 호출될 경우
+>     if (viewModelStore == null) {
+>         val nc = lastNonConfigurationInstance as NonConfigurationInstances?
+>             if (nc != null) {
+>                 // 이전의 뷰모델 스토어 객체 연
+>                 viewModelStore = nc.viewModelStore
+>             }
+>         }
+>     if (viewModelStore == null && custom == null) {
+>         return null
+>     }
+>     val nci = NonConfigurationInstances()
+>     nci.custom = custom
+>     nci.viewModelStore = viewModelStore
+>     return nci
+> }
+> ```
 
-## Save state API
+
+
+> Question
+> 
+> viewModelScope를 사용한다면 이 스코프는 어떻게 구성되어 있고, 왜 그렇게 구성되어 있으까요?
+> 
+> Answer
+> 
+> `CloseableCoroutineScope` 타입의 scope를 사용하는데 이 객체는 `Dispatchers.Main.immediate` 디스패처와 `SupervisorJob`이 합쳐진 `CoroutineContext`를 사용하고 있습니다. **`ViewModel`의 `onCleared`가 호출될 때 실행되고 있는 job을 종료하기 위해 `Closeable` 스코프로 구성**되어있으며, 일반 `Main`이 아닌 `Main.immediate` 디스패처가 사용된 이유는 **이미 올바른 컨텍스트에 있는 경우에 추가 재디스패치 없이 즉시 코루틴을 실행하는 디스패처를 반환**하여 사용하기 위함입니다. 코루틴은 Context에 맞는 스레드로 적재하는 과정이 필요한데, 이 과정을 생략하고 즉각적으로 작업을 실행하기 위해 해당 디스패처를 사용합니다. 또한 **`SupervisorJob` 내의 자식 코루틴들은 서로에게 영향을 받지 않기에 여러 개의 자식 코루틴들 중 하나가 취소되어도 다른 코루틴에 영향을 주지 않으며, `SupervisorJob`에도 영향을 미치지 않습니다**. 이런 이유로 `SupervisorJob`을 내부적으로 사용하고 있습니다.
 
 
 
 # Thread vs Process
+
+> Question
+> 
+> 안드로이드 개발 시 멀티쓰레드 환경에서 안전하게 접근을 처리할 수 있는 방법들은 어떤 것이 있을까요? 
+> 
+> Answer
 
 
 
@@ -241,6 +345,12 @@
 ## Koin
 
 ## Dagger Hilt
+
+> Question
+> 
+> Hilt 사용 시 동일한 타입의 객체를 구분해서 제공해야 하는 경우 어떻게 처리할 수 있을까요?
+> 
+> Answer
 
 
 
@@ -276,9 +386,9 @@
 
 # UI Optimization
 
-## Like 처리
+- Like 처리
 
-## 중복된 API 호출 문제
+- 중복된 API 호출 문제 해결
 
 
 
@@ -286,9 +396,15 @@
 
 ## Sealed class vs Enum
 
+
+
 ## Lazy vs lateinit
 
+
+
 ## Serialize vs Parcelable
+
+
 
 ## Coroutine
 
@@ -297,6 +413,8 @@
 > Question
 > 
 > 스레드와 차이점이 뭘까요?
+
+
 
 ## Flow
 
@@ -308,6 +426,8 @@
 
 ### Cold Flow
 
+
+
 ## LiveData
 
 > Question
@@ -318,11 +438,19 @@
 
 # Compose
 
+
+
 ## Composition
+
+
 
 ## Recomposition
 
+
+
 ## Performance
+
+
 
 ## LazyXXX
 
