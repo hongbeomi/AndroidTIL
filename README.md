@@ -294,7 +294,7 @@ ViewModel 내부에 저장된 상태는 저장된 인스턴스 상태(Save Insta
 > 
 > Answer
 > 
-> `ViewModelStoreOwner`라는 인터페이스가 `ViewModelStore`를 구성 변경 중에도 유지하고 만약 파괴될 경우 `ViewModelStore`의 `clear`를 호출하는 역할을 담당하는데, 이 `ViewModelStoreOwner`를 구현하는 클래스가 `ComponentActivity`와 `Fragment`입니다.  각각 클래스에서 뷰모델 객체를 관리하는 `ViewModelStore`를 생성할 때 `NonConfigurationInstances`라는 객체에서 참조하거나 스스로 생성하는데, 이 `NonConfigurationInstances`가 구성 변경시 이전 `ViewModelStore`의 인스턴스를 보유하고 있기에 구성 변경 시 해당 인스턴스를 액티비티/프래그먼트에 다시 연결해줌으로써 `ViewModel`이 유지됩니다. (아래 코드 참고)
+> `ViewModelStoreOwner`라는 인터페이스가 `ViewModelStore`를 구성 변경 중에도 유지하고 만약 파괴될 경우 `ViewModelStore`의 `clear`를 호출하는 역할을 담당하는데, 이 `ViewModelStoreOwner`를 구현하는 클래스가 `ComponentActivity`와 `Fragment`입니다.  액티비티의 경우 뷰모델 객체를 관리하는 `ViewModelStore`를 생성할 때 `NonConfigurationInstances`라는 객체에서 참조하거나 스스로 생성하는데, 이 `NonConfigurationInstances`가 구성 변경시 이전 `ViewModelStore`의 인스턴스를 보유하고 있기에 구성 변경 시 해당 인스턴스를 액티비티/프래그먼트에 다시 연결해줌으로써 `ViewModel`이 유지됩니다. (아래 코드 참고)
 > 
 > ```kotlin
 > final override fun onRetainNonConfigurationInstance(): Any? {
@@ -317,6 +317,10 @@ ViewModel 내부에 저장된 상태는 저장된 인스턴스 상태(Save Insta
 >     return nci
 > }
 > ```
+> 
+> `Fragment`의 경우 실질적으로는 `FragmentManager`가 `ViewModelStore`를 관리하고 있으며, 내부적으로 해시맵 객체를 통해 `Fragment` 의 이름을 key로 두고 `ViewModelStore`를 value으로 보관하고 있습니다. 이 때 액티비티와 비슷하게 액티비티 재구성 이벤트 전반에 걸쳐 보존되는 `FragmentManagerNonConfig` 객체를 이용하여 `ViewModelStore`를 보존시켜줍니다.
+> 
+> 
 
 
 
