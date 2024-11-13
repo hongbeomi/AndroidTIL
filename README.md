@@ -252,7 +252,7 @@
 
 <img src="https://pluu.github.io/assets/img/blog/2020/0208-savedsate/04.png" title="" alt="" width="488">
 
-`Activity`에서는 `onSaveInstanceState`에서 상태를 저장하고, `onCreate(savedInstanceState: Bundle?)` 함수와 `onRestoreInstanceState` 함수를 통해 상태를 복원할 수 있습니다.
+`Activity`에서는 `onSaveInstanceState`에서 상태를 저장하고, `onCreate(savedInstanceState: Bundle?)` 함수를 사용하거나 `onRestoreInstanceState` 함수를 사용하여 상태를 복원할 수 있습니다.
 
 > `onRestoreInstanceState`는 `onStart` 이후에 호출되고, 재생성되어 시작될 때만 호출됩니다.
 
