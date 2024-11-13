@@ -236,11 +236,11 @@
 
 - ViewModel 객체 내에 위치
 
-- Compose : `rememberSaveable` 사용
+- **Compose** : `rememberSaveable` 사용
 
-- View : `onSaveInstanceState` API 사용
+- **View** : `onSaveInstanceState` API 사용
 
-- ViewModel : `SavedStateHandle` 객체 사용
+- **ViewModel** : `SavedStateHandle` 객체 사용
 
 - 로컬 저장소 사용 : (`SharedPreference`, `DataStore`, `Room`...등등)
 
@@ -264,9 +264,9 @@
 
 ![](/Users/hongbeom/Library/Application%20Support/CleanShot/media/media_5nojApuj4L/CleanShot%202024-11-13%20at%2016.04.28@2x.png)
 
-ViewModel 내부에 저장된 상태는 저장된 인스턴스 상태(Save Instance State)와 달리 시스템에 의해 종료될 때는 폐기됩니다. 시스템에 의한 프로세스 종료 후 재시작 시 상태를 유지하고 싶다면 
+`ViewModel` 내부에 저장된 상태는 저장된 인스턴스 상태(Save Instance State)와 달리 시스템에 의해 종료될 때는 폐기됩니다. 시스템에 의한 프로세스 종료 후 재시작 시 상태를 유지하고 싶다면 
 
-[SavedStateHandle](https://developer.android.com/topic/libraries/architecture/viewmodel/viewmodel-savedstate?_gl=1*k4lah3*_up*MQ..*_ga*MTI1MjE3MTM0NC4xNzMxNDgxMzA5*_ga_6HH9YJMN9M*MTczMTQ4MTMwOS4xLjAuMTczMTQ4MTMwOS4wLjAuMTYxNDA5Njk4Nw..) API를 활용해야 합니다. 이 API는 키-값 쌍으로 구성되어 사용할 수 있으며 UI 로직이 아닌 비즈니스 로직을 저장하기에 적합합니다. UI 로직은 `onSaveInstanceState` API나 `rememberSaveable` API를 사용하는 것이 적합합니다.
+[SavedStateHandle](https://developer.android.com/topic/libraries/architecture/viewmodel/viewmodel-savedstate?_gl=1*k4lah3*_up*MQ..*_ga*MTI1MjE3MTM0NC4xNzMxNDgxMzA5*_ga_6HH9YJMN9M*MTczMTQ4MTMwOS4xLjAuMTczMTQ4MTMwOS4wLjAuMTYxNDA5Njk4Nw..) API를 활용해야 합니다. 이 API는 키-값 쌍으로 구성되어 사용할 수 있으며 UI 로직이 아닌 **비즈니스 로직**을 저장하기에 적합합니다. **UI 로직**은 `onSaveInstanceState` API나 `rememberSaveable` API를 사용하는 것이 적합합니다.
 
 > Question
 > 
@@ -319,8 +319,6 @@ ViewModel 내부에 저장된 상태는 저장된 인스턴스 상태(Save Insta
 > ```
 > 
 > `Fragment`의 경우 실질적으로는 `FragmentManager`가 `ViewModelStore`를 관리하고 있으며, 내부적으로 해시맵 객체를 통해 `Fragment` 의 이름을 key로 두고 `ViewModelStore`를 value으로 보관하고 있습니다. 이 때 액티비티와 비슷하게 액티비티 재구성 이벤트 전반에 걸쳐 보존되는 `FragmentManagerNonConfig` 객체를 이용하여 `ViewModelStore`를 보존시켜줍니다.
-> 
-> 
 
 
 
@@ -336,25 +334,85 @@ ViewModel 내부에 저장된 상태는 저장된 인스턴스 상태(Save Insta
 
 # Thread vs Process
 
+**Process**는 메모리에 올라가서 실행되고 있는 작업의 단위를 뜻합니다. 반면 **Thread**는 프로세스 내에서 실행되는 흐름의 단위를 뜻합니다. 
+
+각각의 프로세스는 별도의 주소 공간에서 실행되며, 프로세스는 타 프로세스의 변수나 자료구조에 접근 할 수 없습니다. 프로세스는 타 프로세스의 자원에 접근하려면 IPC(inter process communication) 방식을 사용해야 합니다. (ex : 파일, 소켓 등을 이용한 통신 방법)
+
+스레드는 하나의 프로세스 내에서 동작되는 여러 실행의 흐름이기에 프로세스 내의 자원들에 접근하고 스레드끼리 공유할 수 있습니다. 
+
+
+
 > Question
 > 
 > 안드로이드 개발 시 멀티쓰레드 환경에서 안전하게 접근을 처리할 수 있는 방법들은 어떤 것이 있을까요? 
 > 
 > Answer
+> 
+> - `synchronized` : 메서드나 블록을 감싸서 사용하면 **단일 스레드만 접근하도록 할 수 있습니다.** 중첩으로 사용할 경우 데드락을 마주할 수 있기 때문에 주의하여야 합니다. 
+> 
+> - `volatail` : **변수에 해당 어노테이션을 붙여서 사용하면 변수의 값이 메인 메모리에만 저장되어 타 쓰레드 환경에서 메인 메모리의 값을 참조**하므로 변수 값 불일치 문제를 해결할 수 있게 됩니다. 다만 기본적으로 변수는 CPU 캐시에 저장되기 때문에 이 경우 CPU 캐시가 아닌 메인 메모리의 값을 참조하게 되어 성능이 떨어질 수 있습니다.
+> 
+> - `지역 변수 활용하기` : 아래 코드와 같이 전역 변수를 각각 다른 스레드가 참조하는 구조에서 동기화를 보장하기 위해서는 문제가 발생할 수 있는 변수를 지역 변수로 캐스팅하여 사용하여 해결할 수 있습니다.
+>   
+>   ```kotlin
+>   private var str: String? = null
+>   
+>   // 메인 스레드에서 실행되는 함수
+>   fun startProcess1(value : String) {
+>       this.str = value
+>   }
+>   
+>   // 타 스레드에서 실행되는 함수
+>   fun startProcess2() {
+>       if (str == null) {
+>           return
+>       }
+>       str.XXX
+>   }
+>   
+>   --------------------------------------------
+>   
+>   // 지역 변수를 활용하여 해결
+>   fun startProcess2() {
+>       val localStr = str
+>       if (localStr == null) {
+>           return
+>       }
+>       localStr.XXX
+>   }
+>   ```
 
 
 
 # Dependency Injection
 
+종속성 주입은 특정 클래스가 다른 클래스가 필요할 경우 직접 종속성을 가져오는 대신, 인스턴스를 주입 받는 것을 의미합니다. 코드의 재사용성, 리팩토링, 테스트에 용이성을 가집니다. 안드로이드에서 사용되는 DI 라이브러리는 크게 `Koin`과 `Dagger`로 나뉩니다.
+
 ## Koin
 
+`Koin`은 코틀린 DSL을 사용하고 런타임에서 의존성 주입을 제공하는 라이브러리 입니다. 어노테이션 프로세싱을 사용하여 빌드 시 별도의 파일을 생성하지 않지만 리플렉션을 사용하고 인스턴스를 런타임에 주입해주기 때문에 런타임 시 크래시를 마주할 수 있습니다. Service Locator 패턴을 사용합니다. 
+
+(`Koin`의 축소판으로 구현한 [SimpleKoin](https://github.com/hongbeomi/SimpleKoin) 코드 참고)
+
+
+
 ## Dagger Hilt
+
+힐트는 코인과 다르게 컴파일 시점에 주입과 관련된 스텁 코드를 생성하고 오류가 있는 경우 컴파일 시점에 표시합니다. 어노테이션을 통해 사용할 수 있으며 의존 관계 파악이 쉽습니다.
+
+사용할 수 있는 스코프와 컴포넌트는 아래 그림과 같습니다.
+
+<img title="" src="https://velog.velcdn.com/images/leeyjwinter/post/e6acd118-6e64-4d65-ae4e-b0daced88c46/image.png" alt="안드로이드 Hilt 4] - Component와 Scope" width="592">
+
+
 
 > Question
 > 
 > Hilt 사용 시 동일한 타입의 객체를 구분해서 제공해야 하는 경우 어떻게 처리할 수 있을까요?
 > 
 > Answer
+> 
+> 특정 이름으로 `@Qualifier` 어노테이션을 작성하고 제공하는 곳에 해당 이름으로 어노테이션을 달아서 사용하여 처리할 수 있습니다.
 
 
 
