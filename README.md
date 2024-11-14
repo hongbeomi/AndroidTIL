@@ -420,11 +420,25 @@
 
 ## MVC
 
+model, view, controller로 이루어져 있으며 **model**은 데이터, 비즈니스 로직들을 합쳐 부릅니다. (나머지 아키텍쳐도 동일합니다.) **view**는 컨트롤러에 의해 UI 갱신이 이루어집니다. **controller**는 사용자의 이벤트를 받고 그에 따라 model을 변경하며 view를 다룹니다(activity...). 컨트롤러는 뷰와 강하게 결합되고 시간이 지남에 따라 많은 코드가 쌓이게 됩니다.
+
+
+
 ## MVP
+
+mvc와 다르게 **view**는(xml, activity...) 사용자의 이벤트를 입력받으며 presenter를 참조합니다. **presenter**는 view로 부터 이벤트를 전달받아 model을 처리하고 다시 view를 업데이트 합니다. 또한 view와 1:1 관계를 가지고 있습니다. view와 model의 비즈니스 로직이 의존하지 않게 되지만, view와 presenter가 강하게 결합됩니다. (물론 인터페이스로 의존성을 처리해볼 수 있습니다.) 또한 view마다 큰 의미가 없는 presenter가 추가될 수 있습니다.
+
+## 
 
 ## MVVM
 
+mvvm에서 **view**는 viewmodel을 알고 있습니다. **viewmodel**은 view를 모르며, view로 부터 사용자 이벤트를 전달 받고 model을 업데이트 합니다. viewmodel이 모델을 업데이트하고 외부로 노출할 상태를 정의하면, view가 적절한 방법으로 해당 상태를 가져갑니다. (observable, 데이터 바인딩 등..) 이 아키텍쳐는 view가 model의 비즈니스 로직에 의존하지 않으며 view와 viewmodel이 강하게 결합되지 않습니다. 하지만 역시 viewmodel이 시간이 지날수록 복잡해진다는 단점이 있습니다.
+
+
+
 ## MVI
+
+
 
 
 
