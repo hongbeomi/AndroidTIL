@@ -592,17 +592,43 @@ suspend 한정자를 함수에 붙이게 되면, 컴파일러는 함수의 맨 �
 
 # Compose
 
+기존의 View 시스템(xml)과 다르게 UI를 함수 및 선언형으로 다룰 수 있는 시스템입니다. UI를 함수로 작성하기 때문에 재사용성이 높고, View 측정을 여러 번 측정하지 않고 한 번에 측정하는 이점이 있습니다. 
+
+Compose에서 작성한 UI는 객체로 노출되지 않으며, 대체적으로 Stateless 합니다. 상위 UI 컴포넌트나 장소에서 인자로 데이터(상태)를 내려받고, 상위 컴포넌트로 이벤트를 올리는 방식으로 사용할 수 있습니다. 상태가 변경될 경우 UI는 다시 그려지며 이 프로세스를 **recomposition**이라고 합니다.
+
+<img src="https://developer.android.com/static/develop/ui/compose/images/mmodel-flow-data.png?hl=ko" title="" alt="상위 수준 객체부터 하위 요소까지 Compose UI의 데이터 흐름을 보여주는 그림" width="529">
+
+<img src="https://developer.android.com/static/develop/ui/compose/images/mmodel-flow-events.png?hl=ko" title="" alt="앱 로직에 의해 처리되는 이벤트를 트리거하여 UI 요소가 상호작용에 어떻게 응답하는지 보여주는 그림" width="533">
+
 
 
 ## Composition
+
+UI가 초기에 구성되는 과정을 Composition이라고 하는데, 이 과정에서 상태가 변경되는 경우 UI는 재구성될 수 있습니다. 컴포지션은 초기 컴포지션을 통해서만 생성되고 리컴포지션(재구성)을 통해서만 업데이트될 수 있습니다. 컴포지션을 수정하는 유일한 방법은 리컴포지션을 통하는 것입니다.
+
+![컴포저블의 수명 주기를 보여주는 다이어그램](https://developer.android.com/static/develop/ui/compose/images/lifecycle-composition.png?hl=ko)
 
 
 
 ## Recomposition
 
+리컴포지션은 Jetpack Compose가 상태 변경사항에 따라 변경될 수 있는 컴포저블을 다시 실행한 다음 변경사항을 반영하도록 컴포지션을 업데이트하는 것입니다. 리컴포지션이 불필요하게 많이 발생할 경우, 앱이 버벅일 수 있기 때문에 불필요한 리컴포지션 횟수를 줄이는 것은 성능상 매우 중요합니다. 
+
+리컴포지션 시 컴포저블 UI가 이전 컴포지션 시 호출한 것과 다른 컴포저블 UI를 호출하는 경우 Compose는 **호출되거나 호출되지 않은 컴포저블 UI를 식별**하며 두 컴포지션 모두에서 호출된 컴포저블 UI의 경우엔 **입력이 변경되지 않은 경우 재구성하지 않습니다**. 
 
 
-## Performance
+
+## Performance Tip
+
+- **LazyXXX에 `key`를 제공하기** : 아이템 추가/제거 등 이벤트에서 불필요한 리컴포지션을 멈출 수 있습니다.
+
+- **`derivedStateOf` 사용하기** : 자주 변경되는 상태를 필요한 변경 사항만 버퍼링할 수 있습니다.
+
+- **상태 지연 처리하기** : 일반적으로 애니메이션 처리 등 변경되는 데이터를 인자로 넘겨서 사용하는 경우 데이터가 변경되었을 때 composition, layout, draw 단계가 모두 실행될 수 있습니다. 이를 방지하기 위해 실제로 필요한 단계에서만 읽을 수 있도록 상태를 연기할 수 있습니다. (ex: `drawBehind`..)
+  
+  또한 중첩된 컴포저블 함수에서, 함수 인스턴스의 상태를 읽고 내부 컴포저블로 매개변수로 전달하는 것은 실제로 상태를 읽는 컴포저블에서만 재구성이 실행되게 할 수 있습니다.
+
+- **baseline profile** : 컴포즈 사용 시 안드로이드 앱을 처음 실행하면 JIT(just in time) 컴파일 동작에 의해 처음 몇 초 동안 버벅거림이 있고 난 후 매끄럽게 동작하게 됩니다. 이 때 baseline profile을 적용하면 이를 해결해볼 수 있습니다. 앱이 배포되었을 때 Play Store에서 앱 시작 시 사용된 클래스 & 메소드 등의 사용된 코드 목록을 집계하고 집계된 baseline profile 파일을 앱 다운로드 시 전달합니다. 따라서 컴파일은 런타임 시 미리 컴파일할 항목을 알게 되므로 성능 향상을 일으킬 수 있습니다. 
 
 
 
@@ -611,12 +637,20 @@ suspend 한정자를 함수에 붙이게 되면, 컴파일러는 함수의 맨 �
 > Question
 > 
 > key, contentType은 무엇이고 각각 지정하지 않으면 어떤 값이 사용되나요?
+> 
+> `key`를 사용하면 아이템의 불필요한 리컴포지션을 막을 수 있습니다. key에 해당하는 타입은 bundle에 담을 수 있는 타입이어야 하며, key를 지정하지 않을 경우 기본 값은 아이템의 position 입니다. `contentType`이 지정되어 있으면 Compose는 동일한 type의 아이템일 경우에만 composition을 재사용할 수 있습니다. 따라서 composition의 재사용과 lazy layout 성능의 이점을 극대화 할수 있습니다.
+> 
+> `key`는 리사이클러뷰의 `areItemsTheSame`, `contentType`은 `areContentsTheSame`에 대응됩니다.
 
 > Question
 > 
 > 어떤 원리로 아이템들이 재사용되는 걸까요?
+> 
+> 아이템이 `measure` 로직에 진입할 때,  첫 생성 시라면 아이템의 `key`, `contentType`, content를 아이템 프로바이더 람다에서 가져와서 `Placeable`을 생성하고 저장합니다. 이 때 content를 가져올 때 아이템을 생성하는 팩토리 함수에서도 해당 `content`를 생성하는 람다를 캐시하고 있습니다. 스크롤 같은 이벤트 발생 시에도 처음으로 표시되는 아이템의 경우 위 동작을 반복하고, 캐시에 존재하는 아이템은 캐시에서 호출되어 사용됩니다. 그리고 dispose 되는 아이템은 content가 생성될 때 등록된 `DisposableEffect`에 의해 해당 content 생성 람다의 참조가 끊어집니다.
+> 
+> (`LazyLayoutItemContentFactory.kt`, `LazyLayoutMeasureScope.kt`, `LazyLayout.kt`, `LazySaveableStateHolderProvider.kt`, `LazyListItemProvider.kt` 클래스 참조)
 
-
+ 
 
 # UI Optimization
 
